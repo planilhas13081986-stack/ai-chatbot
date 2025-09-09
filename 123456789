@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Frete e Produtos - Pedreira Triângulo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f9;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    select, input {
+      padding: 8px;
+      width: 100%;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      background: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background: #005fa3;
+    }
+    #resultado {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    #calc-container {
+      display: none; /* escondido até login */
+    }
+  </style>
+</head>
+<body>
+  <!-- Tela de Login -->
+  <div class="container" id="login-container">
+    <h2>Login</h2>
+    <label for="usuario">Usuário:</label>
+    <input type="text" id="usuario" placeholder="Digite o usuário">
+
+    <label for="senha">Senha:</label>
+    <input type="password" id="senha" placeholder="Digite a senha">
+
+    <button onclick="login()">Entrar</button>
+    <p id="erro" style="color:red; text-align:center;"></p>
+  </div>
+
+  <!-- Calculadora -->
+  <div class="container" id="calc-container">
+    <h1>Calculadora de Frete + Produto</h1>
+
+    <label for="produto">Selecione o produto:</label>
+    <select id="produto">
+      <option value="55">Pó (R$55,00/Ton)</option>
+      <option value="60">Areia Artif. (R$60,00/Ton)</option>
+      <option value="48">Granilha (R$48,00/Ton)</option>
+      <option value="46">Pedrisco (R$46,00/Ton)</option>
+      <option value="46">Brita 1 (R$46,00/Ton)</option>
+      <option value="46">Brita 2 (R$46,00/Ton)</option>
+      <option value="42">Brita 3 (R$42,00/Ton)</option>
+      <option value="38">Rachão (R$38,00/Ton)</option>
+      <option value="38">Pulmão (R$38,00/Ton)</option>
+      <option value="28">Pedra de Mão (R$28,00/Ton)</option>
+      <option value="28">Detonada (R$28,00/Ton)</option>
+      <option value="38">Bica Corrida (R$38,00/Ton)</option>
+      <option value="52">Brita Graduada (R$52,00/Ton)</option>
+      <option value="89">Mist. Concreto c/ Brita 1 (R$89,00/Ton)</option>
+      <option value="99">Mist. Concreto c/ Pedrisco (R$99,00/Ton)</option>
+      <option value="109">Mist. Concreto Bloco (R$109,00/Ton)</option>
+    </select>
+
+    <label for="km">Distância (Km):</label>
+    <input type="number" id="km" value="10" min="1">
+
+    <label for="tipo">Tipo de entrega:</label>
+    <select id="tipo">
+      <option value="truck">Truck</option>
+      <option value="carreta">Carreta</option>
+    </select>
+
+    <button onclick="calcular()">Calcular</button>
+
+    <div id="resultado"></div>
+  </div>
+
+  <script>
+    // Função de login
+    function login() {
+      const usuario = document.getElementById("usuario").value;
+      const senha = document.getElementById("senha").value;
+
+      if (usuario === "pedreira" && senha === "pedreira") {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("calc-container").style.display = "block";
+      } else {
+        document.getElementById("erro").innerText = "Usuário ou senha incorretos!";
+      }
+    }
+
+    // Função da calculadora
+    function calcular() {
+      const precoProduto = parseFloat(document.getElementById('produto').value);
+      const km = parseFloat(document.getElementById('km').value);
+      const tipo = document.getElementById('tipo').value;
+
+      // Tabela Truck
+      const freteTruck = [
+        {max: 10, valor: 7.60},
+        {max: 20, valor: 15.20},
+        {max: 30, valor: 22.80},
+        {max: 40, valor: 30.40},
+        {max: 50, valor: 38.00},
+        {max: 60, valor: 45.60},
+        {max: 70, valor: 53.20}
+      ];
+
+      // Tabela Carreta
+      const freteCarreta = [
+        {max: 10, valor: 5.06},
+        {max: 20, valor: 10.13},
+        {max: 30, valor: 15.20},
+        {max: 40, valor: 20.26},
+        {max: 50, valor: 25.33},
+        {max: 60, valor: 30.40},
+        {max: 70, valor: 35.46}
+      ];
+
+      const tabela = tipo === "truck" ? freteTruck : freteCarreta;
+
+      // Define a taxa de frete conforme km (proporcional após 70km)
+      let taxaFrete;
+      if (km <= 70) {
+        taxaFrete = tabela[tabela.length - 1].valor;
+        for (let faixa of tabela) {
+          if (km <= faixa.max) {
+            taxaFrete = faixa.valor;
+            break;
+          }
+        }
+      } else {
+        const ultimaFaixa = tabela[tabela.length - 1];
+        const valorPorKm = ultimaFaixa.valor / ultimaFaixa.max; // proporcional
+        taxaFrete = valorPorKm * km;
+      }
+
+      const total = precoProduto + taxaFrete;
+
+      document.getElementById('resultado').innerHTML = `
+        <strong>Resumo:</strong><br>
+        Tipo de Entrega: ${tipo.toUpperCase()} <br>
+        Produto: R$ ${precoProduto.toFixed(2)} /Ton <br>
+        Frete: R$ ${taxaFrete.toFixed(2)} /Ton <br>
+        <strong>Total: R$ ${total.toFixed(2)} /Ton</strong>
+      `;
+    }
+  </script>
+</body>
+</html>
